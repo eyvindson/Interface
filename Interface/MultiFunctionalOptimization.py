@@ -598,6 +598,54 @@ class MultiFunctionalOptimization:
             elif self.objectiveTypes[objName][2] == "min":
                 self.epsilonConstraints[objName].SetUb(epsilonValues[objName])
 
+    def selection_fn(trace,points,selector):
+        #geodf2 = geodf1[(geodf1['year'] == kwargs['year']) & (geodf1['regime'] == kwargs['regime'])]
+        #if 't' in locals():
+        #    t.data[0].cells.values = [self.geodf1.iloc[points.point_inds][col] for col in ['id','Harvested_V','SC','Biomass']]#variables of interest in map -- could be a cross box (?)
+        global sel_stand
+        bb = [[self.geodf1.iloc[points.point_inds][col] for col in ['id']]]
+        sel_stand = [bb[0][0].iloc[i] for i in range(0,len(bb[0][0]))]
+        print(sel_stands)
+
+    def on_display_ADD_CONST(self):
+        if "SPATIAL" in self.constraints:
+            for standId in self.sel_stand:
+                self.constraints["SPATIAL"][standId] = self.solver.Add(self.regimesDecision[(standId,self.regime)]==1,name = "Only"+self.regime+"onStand"+str(standId))
+        else:
+            self.constraints["SPATIAL"] = dict()
+            for standId in self.sel_stand:
+                self.constraints["SPATIAL"][standId] = self.solver.Add(self.regimesDecision[(standId,self.regime)]==1,name = "Only"+self.regime+"onStand"+str(standId))
+    
+    def selection_fn_CONST(self,trace,points,selector):
+        geodf3 = self.geodf2[(self.geodf2['year'] == 2116) & (self.geodf2['regime'] == self.regime)]
+        
+        bb = [[geodf3.iloc[points.point_inds][col] for col in ['id']]]
+        self.sel_stand = [bb[0][0].iloc[i] for i in range(0,len(bb[0][0]))]
+        colStandConst = widgets.interactive(self.on_display_ADD_CONST,{"manual":True,"manual_name": "Spatial Constraint" + str(len(self.sel_stand))+ " Stands as "+self.regime})
+        display(HTML('''<style>
+        .widget-label { min-width: 60% !important; }
+        </style>'''))
+        display(colStandConst)
+        
+        
+        
+    def on_display_map_CONST(self,**kwargs):
+        display(kwargs)
+        clear_output()
+        geodf3 = self.geodf2[(self.geodf2['year'] == 2116) & (self.geodf2['regime'] == kwargs['regime'])]
+        fig = px.choropleth_mapbox(geodf3.set_index("id"),    geojson=geodf3.geometry,    locations=geodf3.index,    color="V",center=dict(lat= 62.82633, lon=21.259906),    mapbox_style="open-street-map",opacity =0.4,    zoom=13,)
+        fig.update_layout(    height=500,    autosize=True,    margin={"r": 0, "t": 0, "l": 0, "b": 0})#
+        ff =go.FigureWidget(fig)
+        scatter = ff.data[0]
+        self.regime=kwargs['regime']
+        scatter.on_selection(self.selection_fn_CONST)
+        display(VBox([ff]))
+        
+    
+    def removeSpatialConstraints(self):
+        self.constraints["SPATIAL"] = dict()
+    
+    
     def defineReferencePointAndSolve(self,**kwargs):
         display("Starting problem solving at "+str(datetime.now()))
         self.solutionCounter +=1
@@ -635,6 +683,60 @@ class MultiFunctionalOptimization:
             display("Solution printed at "+str(datetime.now()))
             self.result = self.CalculateResults()
             display("Ready for Maps & Graphs at "+str(datetime.now()))
+            layout = widgets.Layout(width='auto', height='40px') 
+            self.printSolutionButton = widgets.Button(description='Print solution',layout=layout)
+            self.printSolutionButton.on_click(self.printSolution)
+            display(self.printSolutionButton)
+            self.opt_GraphChooser = widgets.interactive(self.create_line,{"manual":True,"manual_name": "Display / Update Graph"}, **{"feature1":self.result.columns})
+            display(HTML('''<style>
+                .widget-label { min-width: 60% !important; }
+                </style>'''))
+            display(self.opt_GraphChooser)
+            
+            result = self.result
+            geodf = gpd.read_file(module_path + "\Region.geojson") ## Data with geometry ##EDIT
+            # shape file is a different CRS,  change to lon/lat GPS co-ordinates
+            geodf = geodf.to_crs("WGS84")
+
+            #Merging databases together - linking spatial information with simulated
+            geometry = pd.DataFrame(list(set(result.index.get_level_values(0))),geodf['geometry'])
+            geometry = geometry.reset_index()
+            d = {'geometry':geodf['geometry'], 'id': list(set(result.index.get_level_values(0)))}
+            geometry = pd.DataFrame(d)
+
+            self.geodf1 = result.reset_index().merge(geometry,right_on="id",left_on="id")
+            geometry = self.geodf1['geometry']
+            self.geodf1.drop('geometry',axis=1)
+            self.geodf1 = gpd.GeoDataFrame(self.geodf1,crs="WGS84",geometry=geometry)
+            
+            opt_TypeChooser = widgets.interactive(self.on_display_map_opt,{"manual":True,"manual_name": "Display / Update Map"},**{'values':list(self.geodf1.columns)[2:-1],'year':set(self.geodf1['year'])})
+            display(HTML('''<style>
+                .widget-label { min-width: 60% !important; }
+                </style>'''))
+            display(opt_TypeChooser)
+            filename = "DATA/DATA.h5"
+            dat = pd.read_hdf(filename.split(".")[0]+".h5",key="df")
+
+            #Merging databases together - linking spatial information with simulated
+            geometry = pd.DataFrame(list(set(dat['id'])),geodf['geometry'])
+            d = {'geometry':geodf['geometry'], 'id1': list(set(dat['id']))}
+            geometry = pd.DataFrame(d)
+
+            self.geodf2 = dat.merge(geometry,left_on="id",right_on="id1")
+            geometry = self.geodf2['geometry']
+            self.geodf2.drop('geometry',axis=1)
+            self.geodf2 = gpd.GeoDataFrame(self.geodf2,crs="WGS84",geometry=geometry)
+
+            
+            
+            colTypeChooser = widgets.interactive(self.on_display_map_CONST,{"manual":True,"manual_name": "Add spatial restriction"},**{'regime':[t for t in list(set(self.geodf2.regime)) if t != "initial_state"]})
+            display(HTML('''<style>
+            .widget-label { min-width: 60% !important; }
+            </style>'''))
+            display(colTypeChooser)
+            
+            
+            
             return {objName:self.objective[objName].solution_value() for objName in self.objectiveTypes.keys()}
         else:
             display("Could not solve")
@@ -650,6 +752,12 @@ class MultiFunctionalOptimization:
     def enableAndDisableConstraints(self,**kwargs):
         enabledConstraints = kwargs
         for constraintName in self.constraints.keys():
+            if self.constraintTypes[constraintName][0] == "SPATIAL":
+                for standId in self.standIds:
+                    if (standId) in self.constraints['SPATIAL'].keys():
+                        for regime in self.regimes:
+                            if (standId,regime) in self.regimesDecision.keys():
+                                self.constraints[constraintName][standId].SetUb(0)
             if self.constraintTypes[constraintName][0] == "Allowed regimes":
                 for regime in self.regimes:
                     if regime not in self.constraintTypes[constraintName][2]:
@@ -707,38 +815,26 @@ class MultiFunctionalOptimization:
     
     #def printResult(self,_):
     #    results = self.CalculateResults()
+    
+    
+    def to_print_output(self,_):
+        import os
+        from datetime import datetime
+        n = datetime.now()
+        dt_string = n.strftime("%H%M_%S")
 
-    def on_display_map_opt1(self,_):
-        result = self.result
-        geodf = gpd.read_file(module_path + "\Region.geojson") ## Data with geometry ##EDIT
-        # shape file is a different CRS,  change to lon/lat GPS co-ordinates
-        geodf = geodf.to_crs("WGS84")
-
-        import pandas as pd
-
-        #Merging databases together - linking spatial information with simulated
-        geometry = pd.DataFrame(list(set(result.index.get_level_values(0))),geodf['geometry'])
-        geometry = geometry.reset_index()
-        d = {'geometry':geodf['geometry'], 'id': list(set(result.index.get_level_values(0)))}
-        geometry = pd.DataFrame(d)
-
-        self.geodf1 = result.reset_index().merge(geometry,right_on="id",left_on="id")
-        geometry = self.geodf1['geometry']
-        self.geodf1.drop('geometry',axis=1)
-        self.geodf1 = gpd.GeoDataFrame(self.geodf1,crs="WGS84",geometry=geometry)
-        opt_TypeChooser = widgets.interactive(self.on_display_map_opt,{"manual":True,"manual_name": "Display / Update Map"},**{'values':list(self.geodf1.columns)[2:-1],'year':set(self.geodf1['year'])})
-        display(HTML('''<style>
-            .widget-label { min-width: 60% !important; }
-            </style>'''))
-        display(opt_TypeChooser)
-        
-        
+        if not os.path.isdir("./results"):
+            os.mkdir("./results")
+        print_geodf2 = self.geodf2.drop(["geometry"],axis =1)
+        print_geodf2.to_csv("./results/Stand_level_results_at_"+dt_string+".csv")
+    
     def on_display_map_opt(self,**kwargs):
         
         display(kwargs)
         clear_output()
-        geodf2 = self.geodf1[(self.geodf1['year'] == kwargs['year']) & (self.geodf1[kwargs['values']] >=0.001) ]
-        fig = px.choropleth_mapbox(geodf2.set_index("id"),    geojson=geodf2.geometry,    locations=geodf2.index,    color=kwargs['values'],    center=dict(lat= 62.82633, lon=21.259906),    mapbox_style="open-street-map",opacity =0.4,    zoom=13,color_continuous_scale=[[0, 'rgb(240,240,240)'],
+        self.geodf2 = self.geodf1[(self.geodf1['year'] == kwargs['year']) & (self.geodf1[kwargs['values']] >=0.001) ]
+        self.geodf2.set_index("id")
+        ffig = px.choropleth_mapbox(self.geodf2,    geojson=self.geodf2.geometry,    locations=self.geodf2.index,    color=kwargs['values'],    center=dict(lat= 62.82633, lon=21.259906),    mapbox_style="open-street-map",opacity =0.4,    zoom=13,color_continuous_scale=[[0, 'rgb(240,240,240)'],
                           [0, 'rgb(4,145,32)'],
                           [1, 'rgb(227,26,28,0.5)']])
         fig.update_layout(    height=500,    autosize=True,    margin={"r": 0, "t": 0, "l": 0, "b": 0})#,    paper_bgcolor="#303030",    plot_bgcolor="#303030",)
@@ -746,11 +842,17 @@ class MultiFunctionalOptimization:
         scatter = ff.data[0]
         scatter.on_selection(self.selection_fn)
         display(VBox([ff]))
+        colOutputPrint = widgets.interactive(self.to_print_output,{"manual":True,"manual_name": "Write complete solution to file"})
+        display(HTML('''<style>
+        .widget-label { min-width: 60% !important; }
+        </style>'''))
+        display(colOutputPrint)
 
 
     def create_line(self,**kwargs):
         fig, ax = plt.subplots(figsize=(8, 4), dpi=100)
-        self.result.groupby(['year']).sum().plot(use_index=True,y=kwargs['feature1'],legend=False,title=kwargs['feature1'],xlabel="Year",ax=ax)
+        area = self.data.loc[slice(None),2021,"SA"]['represented_area_by_NFIplot'].sum()
+        (self.result.groupby(['year']).sum()/area).plot(use_index=True,y=kwargs['feature1'],legend=False,title=kwargs['feature1'],xlabel="Year",ax=ax)
 
 
     def on_display_graph_opt1(self,_):
@@ -763,15 +865,21 @@ class MultiFunctionalOptimization:
         display(opt_GraphChooser)
 
     def selection_fn(self,trace,points,selector):
-        #if 't' in locals():
-        #    t.data[0].cells.values = [geodf2.iloc[points.point_inds][col] for col in ['id','Harvested_V','SC','Biomass']]#variables of interest in map -- could be a cross box (?)
-        global sel_stand
-        bb = [[geodf1.iloc[points.point_inds][col] for col in ['id']]]
-        sel_stand = [bb[0][0].iloc[i] for i in range(0,len(bb[0][0]))]
+        bb = [[self.geodf1.iloc[points.point_inds][col] for col in ['id']]]
+        self.sel_stand = [bb[0][0].iloc[i] for i in range(0,len(bb[0][0]))]
+
+    def on_display_map(self,**kwargs):
+        display(kwargs)
+        clear_output()
+        geodf2 = self.geodf1[(self.geodf1['year'] == kwargs['year']) & (self.geodf1['regime'] == kwargs['regime'])]
+        fig = px.choropleth_mapbox(self.geodf2.set_index("id"),    geojson=self.geodf2.geometry,    locations=self.geodf2.index,    color=kwargs['values'],    center=dict(lat= 62.82633, lon=21.259906),    mapbox_style="open-street-map",opacity =0.4,    zoom=13,)
+        fig.update_layout(    height=500,    autosize=True,    margin={"r": 0, "t": 0, "l": 0, "b": 0})#
+        ff =go.FigureWidget(fig)
+        scatter = ff.data[0]
+        scatter.on_selection(self.selection_fn)
+        display(VBox([ff]))
 
     
-
-
     def showGUI(self,debug=False):
         self.debug=debug
         self.imEps = widgets.interactive(self.defineEpsilonConstraint, {'manual': True}, 
@@ -798,7 +906,7 @@ class MultiFunctionalOptimization:
             self.imRef.children[i].step=0.01*(self.objectiveRanges[objName][1]-self.objectiveRanges[objName][0])
             self.imEps.children[i].readout_format ='e'
             self.imRef.children[i].readout_format ='e'
-        self.imEps.children[-2].description = "Set epsilon constraints"
+        self.imEps.children[-2].description = "Set constraints"
         self.imRef.children[-2].description = "OPTIMIZE"
         self.imConst.children[-2].description = "Change constraints"
         self.geodf = self.geodf = gpd.read_file(module_path+"\Region.geojson") ## Change to variable
@@ -814,21 +922,17 @@ class MultiFunctionalOptimization:
             .widget-label { min-width: 60% !important; }
         </style>'''))
         #display(self.fig)
-        display(HTML("<h2>Epsilon constraint values</h2>"))
+        display(HTML("<h2>Constraint values</h2>"))
         display(self.imEps)
         display(HTML("<h2>Reference point</h2>"))
         display(self.imRef)
-        display(HTML("<h2>Enabled constraints</h2>"))
-        display(self.imConst)
-        self.printSolutionButton = widgets.Button(description='Print solution',layout=layout)
-        self.printSolutionButton.on_click(self.printSolution)
-        self.printResultButton = widgets.Button(description='Display optimized map',layout=layout)
-        self.printResultButton.on_click(self.on_display_map_opt1)
-        display(self.printSolutionButton)
-        display(self.printResultButton)
-        self.printGraphButton = widgets.Button(description='Display Graphs',layout=layout)
-        self.printGraphButton.on_click(self.on_display_graph_opt1)
-        display(self.printGraphButton)
+        #display(HTML("<h2>Enabled constraints</h2>"))
+        #display(self.imConst)
+        #remSpatial = widgets.interactive(self.removeSpatialConstraints,{"manual":True,"manual_name": "Remove spatial restriction"})
+        #display(HTML('''<style>
+        #.widget-label { min-width: 60% !important; }
+        #</style>'''))
+        #display(remSpatial)
 
         
     def calculateMFEyvindsonObjectiveRanges(self, debug=False):
@@ -912,8 +1016,9 @@ class MultiFunctionalOptimization:
                 display("Something strange in the problem")
             if res == self.solver.NOT_SOLVED:
                 display("Problem could not be solved for some reason")  
-            
-    
+
+
+
 
     def addEyvindsonMultifunctionality(self, ecoSystemServices, aggregation = None):
         #IF no aggregation method is specified -- then all will be assumed to be the average method
