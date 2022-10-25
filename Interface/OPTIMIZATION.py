@@ -17,7 +17,17 @@ if module_path not in sys.path:
     sys.path.append(module_path+"/py_class")
 
 class OptGUI:
+    path_to_zip_file = module_path + "/DATA.zip"
+    directory_to_extract_to = module_path+"/DATA"
 
+    try:
+        import zipfile
+        with zipfile.ZipFile(path_to_zip_file, 'r') as zip_ref:
+            zip_ref.extractall(directory_to_extract_to)
+        print("Zip Extracted")
+    except:
+        print("Zip already existed")
+    
     def __init__(self,scenario):
         self.scenario = scenario
         
