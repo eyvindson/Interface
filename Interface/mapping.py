@@ -95,6 +95,8 @@ class Mapping_table:
         
         if kwargs['Year of interest'] != "ALL" and kwargs['Regime of interest'] != "ALL":
             geodfv = self.geodf1[(self.geodf1['year'] == kwargs['Year of interest']) & (self.geodf1['regime'] == kwargs['Regime of interest'])]
+        elif kwargs['Year of interest'] == "ALL" and kwargs['Regime of interest'] == "ALL":
+            geodfv = self.geodf1
         elif kwargs['Year of interest'] == "ALL":
             geodfv = self.geodf1[(self.geodf1['regime'] == kwargs['Regime of interest'])]
         elif kwargs['Regime of interest'] == "ALL":
