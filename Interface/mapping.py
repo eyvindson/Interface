@@ -31,6 +31,17 @@ module_path = os.path.abspath(os.path.join(''))
 
 
 class Mapping_table:
+    path_to_zip_file = module_path + "/DATA.zip"
+    directory_to_extract_to = module_path+"/DATA"
+
+    try:
+        import zipfile
+        with zipfile.ZipFile(path_to_zip_file, 'r') as zip_ref:
+            zip_ref.extractall(directory_to_extract_to)
+        print("Zip Extracted")
+    except:
+        print("Zip already existed")
+    
     def __init__(self):
         
         self.geodf = gpd.read_file(module_path+"/Region.geojson") ## Data with geometry
