@@ -770,7 +770,7 @@ class MultiFunctionalOptimization:
                     if i >= periodNo:
                         self.constraints[constraintName][year].SetLb((-1+enabledConstraints[constraintName])*1e10)
 
-    def printSolution(self,_):
+    def printSolution(self):
         import os
         if not os.path.isdir("./results"):
             os.mkdir("./results")
