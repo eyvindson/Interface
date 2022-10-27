@@ -832,9 +832,9 @@ class MultiFunctionalOptimization:
         
         display(kwargs)
         clear_output()
-        self.geodf2 = self.geodf1[(self.geodf1['year'] == kwargs['year']) & (self.geodf1[kwargs['values']] >=0.001) ]
-        self.geodf2.set_index("id")
-        fig = px.choropleth_mapbox(self.geodf2,    geojson=self.geodf2.geometry,    locations=self.geodf2.index,    color=kwargs['values'],    center=dict(lat= 62.82633, lon=21.259906),    mapbox_style="open-street-map",opacity =0.4,    zoom=13,color_continuous_scale=[[0, 'rgb(240,240,240)'],
+        self.geodf2b = self.geodf1[(self.geodf1['year'] == kwargs['year']) & (self.geodf1[kwargs['values']] >=0.001) ]
+        self.geodf2b.set_index("id")
+        fig = px.choropleth_mapbox(self.geodf2b,    geojson=self.geodf2b.geometry,    locations=self.geodf2b.index,    color=kwargs['values'],    center=dict(lat= 62.82633, lon=21.259906),    mapbox_style="open-street-map",opacity =0.4,    zoom=13,color_continuous_scale=[[0, 'rgb(240,240,240)'],
                           [0, 'rgb(4,145,32)'],
                           [1, 'rgb(227,26,28,0.5)']])
         fig.update_layout(    height=500,    autosize=True,    margin={"r": 0, "t": 0, "l": 0, "b": 0})#,    paper_bgcolor="#303030",    plot_bgcolor="#303030",)
