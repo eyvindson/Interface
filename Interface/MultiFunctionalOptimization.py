@@ -817,7 +817,7 @@ class MultiFunctionalOptimization:
     #    results = self.CalculateResults()
     
     
-    def to_print_output(self,_):
+    def to_print_output(self):
         import os
         from datetime import datetime
         n = datetime.now()
