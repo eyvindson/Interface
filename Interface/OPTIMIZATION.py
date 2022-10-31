@@ -32,7 +32,7 @@ class OptGUI:
         self.scenario = scenario
         
         self.mfo = MFO.MultiFunctionalOptimization() 
-        self.mfo.readData(module_path+"\\"+filename,
+        self.mfo.readData(module_path+"\\"+filename,areaCol="AREA",
                      sampleRatio=1 #If no sample ratio given, the ratio is assumed to be 1.
                     )
         self.columnTypes = {
