@@ -74,6 +74,17 @@ class MultiFunctionalOptimization:
         self.timeEnu = timeEnu
         try:
             self.data = pd.read_hdf(filename.split(".")[0]+".h5",key="df")
+            geodf = gpd.read_file(module_path + "\Region.geojson")
+            geodf = geodf.to_crs("WGS84")
+
+            #Merging databases together - linking spatial information with simulated
+            geometry = pd.DataFrame(list(set(self.data['id'])),geodf[['geometry','area']])
+            geometry = geometry.reset_index()
+            d = {'id': list(set(self.data['id'])),'AREA':geodf['area']}
+            geometry = pd.DataFrame(d)
+
+            self.data = self.data.reset_index().merge(geometry,right_on="id",left_on="id")
+            self.data = self.data.drop('index',axis=1)
         except:
             self.data = pd.read_csv(filename,delimiter=delimeter)
             self.data.to_hdf(filename.split(".")[0]+".h5",key="df")
