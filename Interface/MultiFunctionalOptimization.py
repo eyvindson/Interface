@@ -862,7 +862,7 @@ class MultiFunctionalOptimization:
 
     def create_line(self,**kwargs):
         fig, ax = plt.subplots(figsize=(8, 4), dpi=100)
-        area = self.data.loc[slice(None),2021,"SA"]['represented_area_by_NFIplot'].sum()
+        area = self.data.loc[slice(None),2021,"SA"]['AREA'].sum()
         (self.result.groupby(['year']).sum()/area).plot(use_index=True,y=kwargs['feature1'],legend=False,title=kwargs['feature1'],xlabel="Year",ax=ax)
 
 
