@@ -301,7 +301,7 @@ class OptGUI:
 
         self.CCFregimes = [regime for regime in self.mfo.regimes if "CCF" in regime] + ["SA"]
 
-        self.constraintTypes = {"CCFonPeat":["Allowed regimes","Only CCF on peat lands",self.CCFregimes,"PEAT"],"SPATIAL":["SPATIAL"]}
+        self.constraintTypes = {"CCFonPeat":["Allowed regimes","Only CCF on peat lands",self.CCFregimes,"PEAT"]}#,"SPATIAL":["SPATIAL"]}
 
         self.mfo.defineConstraints(self.constraintTypes)
 
