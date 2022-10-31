@@ -164,10 +164,10 @@ class OptGUI:
             self.objectives = {
                       **self.wood_production_bioenergy,
                       **self.nonwood,
-                      **self.game,
-                      **self.biodiversity,
+                      #**self.game,
+                      #**self.biodiversity,
                       **self.climate_regulation,
-                      **self.recreation,
+                      #**self.recreation,
                       **self.resilience
             }
             
