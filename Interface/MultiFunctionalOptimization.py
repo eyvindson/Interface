@@ -123,7 +123,7 @@ class MultiFunctionalOptimization:
             try:
                 self.data[colname] = self.data[colname].astype(self.columnTypes[colname][0]).values
                 if self.columnTypes[colname][1] == "Relative to Area":
-                    self.data["Total_"+colname]=self.data[colname].values*self.data["represented_area_by_NFIplot"].values
+                    self.data["Total_"+colname]=self.data[colname].values*self.data[self.areaCol].values
                 elif self.columnTypes[colname][1] == "Relative to Volume":
                     self.data["Total_"+colname]=self.data[colname].values*self.data["V"].values
             except KeyError:
