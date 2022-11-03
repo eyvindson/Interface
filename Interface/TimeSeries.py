@@ -5,7 +5,7 @@ import imageio
 import plotly.express as px
 from IPython.display import Image
 
-def time_series_map(geo1,limit = [0,0],variable = "V"):
+def time_series_map(geo1,limit = [0,0],variable = "V",FPS = 2):
     if limit == [0,0]:
         limit = [geo1["Harvested_V"].min(),geo1[variable].max()]
     filenames = []
@@ -29,7 +29,7 @@ def time_series_map(geo1,limit = [0,0],variable = "V"):
 
 
     # build gif
-    with imageio.get_writer(variable+'.gif', mode='I',fps=2) as writer:
+    with imageio.get_writer(variable+'.gif', mode='I',fps=FPS) as writer:
         for filename in filenames:
             image = imageio.imread(filename)
             writer.append_data(image)
