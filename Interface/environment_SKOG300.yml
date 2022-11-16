@@ -208,4 +208,4 @@ dependencies:
     - umap==0.1.1
     - urllib3==1.26.11
     - wget==3.2
-    - ortools=9.4.1874
+    - ortools==9.4.1874
