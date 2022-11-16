@@ -1,4 +1,4 @@
-name: SKOG302
+name: SKOG300
 channels:
   - conda-forge
   - anaconda
@@ -18,8 +18,8 @@ dependencies:
   - brotli-bin=1.0.9=h2bbff1b_7
   - brotli-python=1.0.9=py39h415ef7b_7
   - bzip2=1.0.8=he774522_0
-  - ca-certificates=2022.07.19=haa95532_0
-  - certifi=2022.9.24=py39haa95532_0
+  - ca-certificates=2022.9.24=h5b45459_0
+  - certifi=2022.9.24=pyhd8ed1ab_0
   - cffi=1.15.1=py39h2bbff1b_0
   - cfitsio=3.470=h2bbff1b_7
   - click=7.1.2=pyhd3eb1b0_0
@@ -55,6 +55,7 @@ dependencies:
   - hdf4=4.2.13=h712560f_2
   - hdf5=1.10.6=h1756f20_1
   - icc_rt=2019.0.0=h0cc432a_1
+  - imageio=2.22.0=pyhfa7a67d_0
   - intel-openmp=2021.4.0=haa95532_3556
   - ipykernel=6.9.1=py39haa95532_0
   - ipympl=0.9.2=pyhd8ed1ab_0
@@ -70,6 +71,7 @@ dependencies:
   - jupyter_core=4.10.0=py39haa95532_0
   - jupyterlab_pygments=0.1.2=py_0
   - jupyterlab_widgets=1.1.1=pyhd8ed1ab_0
+  - kaleido-core=0.2.1=h8ffe710_0
   - kealib=1.4.14=hde4a422_1
   - kiwisolver=1.4.2=py39hd77b12b_0
   - krb5=1.19.2=h5b6d351_0
@@ -103,7 +105,7 @@ dependencies:
   - m2w64-xz=5.2.2=2
   - mapclassify=2.4.3=pyhd3eb1b0_0
   - markupsafe=2.1.1=py39h2bbff1b_0
-  - matplotlib-base=3.5.1=py39hd77b12b_1
+  - mathjax=2.7.7=h57928b3_3
   - matplotlib-inline=0.1.2=pyhd3eb1b0_2
   - mistune=0.8.4=py39h2bbff1b_1000
   - mkl=2021.4.0=haa95532_640
@@ -149,6 +151,7 @@ dependencies:
   - python=3.9.12=h6244533_0
   - python-dateutil=2.8.2=pyhd3eb1b0_0
   - python-fastjsonschema=2.15.1=pyhd3eb1b0_0
+  - python-kaleido=0.2.1=pyhd8ed1ab_0
   - python_abi=3.9=2_cp39
   - pytz=2022.1=py39haa95532_0
   - pyutilib=6.0.0=pyh9f0ad1d_0
@@ -194,11 +197,15 @@ dependencies:
   - zstd=1.5.2=h19a0ad4_0
   - pip:
     - charset-normalizer==2.1.0
+    - contourpy==1.0.6
+    - gif==22.5.0
     - idna==3.3
     - itsdangerous==2.0.1
+    - matplotlib==3.6.1
     - mycolorpy==1.5.1
     - requests==2.28.1
     - shapely==1.8.2
     - umap==0.1.1
     - urllib3==1.26.11
     - wget==3.2
+    - ortools=9.4.1874
